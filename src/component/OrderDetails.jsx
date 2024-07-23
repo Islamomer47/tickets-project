@@ -5,9 +5,6 @@ import "jspdf-autotable";
 import Footer from "./Footer";
 import Header from "./header";
 import QRCode from "qrcode";
-import axios from "axios";
-import { ref, getDownloadURL, uploadBytesResumable } from "firebase/storage";
-import { storage } from "../firebase";
 
 const OrderDetails = () => {
   const location = useLocation();
@@ -30,6 +27,11 @@ const OrderDetails = () => {
 
   const generatePDF = async () => {
     const doc = new jsPDF();
+
+    // Generate QR Code
+    const qrCodeDataUrl = await QRCode.toDataURL("Thank you for attending!", {
+      width: 100,
+    });
 
     // Set up fonts and colors
     const primaryColor = "#519341";
@@ -94,47 +96,19 @@ const OrderDetails = () => {
       pageBreak: "auto",
     });
 
-    // Save the PDF to a Blob
-    const pdfBlob = doc.output("blob");
+    // Add QR Code
+    doc.setFillColor(...hexToRgb(primaryColor));
+    doc.rect(160, yOffset + 10, 40, 40, "F"); // Background for QR code
+    doc.addImage(qrCodeDataUrl, "PNG", 160, yOffset + 10, 40, 40);
 
-    // Upload the PDF to Firebase Storage
-    const storageRef = ref(storage, `tickets/${orderDetails.id}.pdf`);
-    const uploadTask = uploadBytesResumable(storageRef, pdfBlob);
+    // Add Footer
+    doc.setFillColor(...hexToRgb(primaryColor)); // Footer background color
+    doc.rect(0, 280, 210, 30, "F"); // Footer rectangle
+    doc.setTextColor(secondaryColor); // White text
+    doc.setFontSize(12);
+    doc.text("Thank you for your purchase!", 105, 295, { align: "center" });
 
-    uploadTask.on(
-      "state_changed",
-      (snapshot) => {
-        // Observe state change events such as progress, pause, and resume
-      },
-      (error) => {
-        // Handle unsuccessful uploads
-        console.error("Upload failed:", error);
-      },
-      () => {
-        // Handle successful uploads
-        getDownloadURL(uploadTask.snapshot.ref).then(async (downloadURL) => {
-          // Generate QR Code with the URL to the uploaded PDF
-          const qrCodeDataUrl = await QRCode.toDataURL(downloadURL, {
-            width: 200,
-          });
-
-          // Add QR Code to the PDF
-          doc.addImage(qrCodeDataUrl, "PNG", 160, yOffset + 10, 40, 40);
-
-          // Add Footer
-          doc.setFillColor(...hexToRgb(primaryColor)); // Footer background color
-          doc.rect(0, 280, 210, 30, "F"); // Footer rectangle
-          doc.setTextColor(secondaryColor); // White text
-          doc.setFontSize(12);
-          doc.text("Thank you for your purchase!", 105, 295, {
-            align: "center",
-          });
-
-          // Save the final PDF locally (optional)
-          doc.save("event-ticket.pdf");
-        });
-      }
-    );
+    doc.save("event-ticket.pdf");
   };
 
   // Helper function to convert hex color to RGB array

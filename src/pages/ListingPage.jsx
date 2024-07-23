@@ -1,24 +1,19 @@
 import { useState, useEffect } from "react";
 import Cards from "../component/Cards";
-// import ListingPageImage from "../assets/images/ListingPageImage.jpg";
 import axios from "axios";
 import Header from "../component/header";
 import Footer from "../component/Footer";
-import {
-  Checkbox,
-  Card,
-  List,
-  ListItem,
-  ListItemPrefix,
-  Typography,
-} from "@material-tailwind/react";
+import { Card } from "@material-tailwind/react";
+import { motion } from "framer-motion";
+import { ChevronDownIcon } from "@heroicons/react/20/solid";
 
 function ListingPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [uniqueLocations, setUniqueLocations] = useState([]);
-  const [selectedLocations, setSelectedLocations] = useState([]);
+  const [selectedLocation, setSelectedLocation] = useState("");
   const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true); // Add loading state
+  const [loading, setLoading] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -44,22 +39,23 @@ function ListingPage() {
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
-      setLoading(false); // Set loading to false after data is fetched
+      setLoading(false);
     }
   };
 
-  const handleCheckboxChange = (location) => {
-    setSelectedLocations((prevState) =>
-      prevState.includes(location)
-        ? prevState.filter((loc) => loc !== location)
-        : [...prevState, location]
-    );
+  const handleSelectChange = (event) => {
+    setSelectedLocation(event.target.value);
+    setIsOpen(false); // Close the dropdown after selection
+  };
+
+  const handleDropdownToggle = () => {
+    setIsOpen(!isOpen);
   };
 
   const filteredEvents = events.filter(
     (event) =>
-      (selectedLocations.length === 0 ||
-        selectedLocations.includes(event.details.location)) &&
+      (selectedLocation === "" ||
+        event.details.location === selectedLocation) &&
       event.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -73,16 +69,9 @@ function ListingPage() {
 
   return (
     <main>
-      <Header/>
+      <Header />
       {/******************************HeroSection in listing page******************************** */}
-      <section
-        // style={{
-        //   "--image-url": `url(${ListingPageImage})`,
-        //   backgroundSize: "cover",
-        //   backgroundPosition: "center",
-        // }}
-        className="flex flex-wrap items-center justify-center w-full h-20 shadow-lg gap-44 shadow-green-600"
-      >
+      <section className="flex flex-wrap items-center justify-center w-full h-20 shadow-lg gap-44 ">
         {/********************************search************************ */}
         <div className="my-3 xl:w-96">
           <div className="relative flex flex-wrap items-stretch w-full mb-4">
@@ -117,40 +106,54 @@ function ListingPage() {
         {/****************************end search************************ */}
       </section>
       {/****************************** end HeroSection in listing page******************************** */}
-{/******************************************* */}
-      <section className="flex flex-wrap justify-center gap-3 mt-5 ">
-      <Card className="w-full max-w-[80rem] p-4 shadow-lg  shadow-green-600">
-        <List className="flex flex-row flex-wrap gap-4 border-8 border-green-600 ">
-          {uniqueLocations.map((location, index) => (
-            <ListItem className="flex-shrink-0 w-auto p-2 " key={index}>
-              <label
-                htmlFor={`horizontal-list-${location.toLowerCase().replace(".", "")}`}
-                className="flex items-center px-3 py-2 cursor-pointer"
+      {/******************************************* */}
+      <section className="flex flex-wrap justify-center gap-3 mt-5">
+        <Card className="w-full max-w-[50rem] p-4 shadow-lg ">
+          <div className="relative">
+            <label
+              htmlFor="location-select"
+              className="block mb-2 text-lg font-semibold text-gray-700"
+            >
+              Select Location:
+            </label>
+            <div className="relative">
+              <motion.select
+                id="location-select"
+                value={selectedLocation}
+                onChange={handleSelectChange}
+                onClick={handleDropdownToggle}
+                className="block w-full py-3 px-4 border border-gray-300 rounded-lg shadow-md bg-white text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2  transition duration-300 ease-in-out"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
               >
-                <ListItemPrefix className="mr-3">
-                  <Checkbox
-                    id={`horizontal-list-${location.toLowerCase().replace(".", "")}`}
-                    ripple={false}
-                    className="hover:before:opacity-0"
-                    containerProps={{ className: "p-0" }}
-                    checked={selectedLocations.includes(location)}
-                    onChange={() => handleCheckboxChange(location)}
-                  />
-                </ListItemPrefix>
-                <Typography color="blue-gray" className="font-medium">
-                  {location}
-                </Typography>
-              </label>
-            </ListItem>
-          ))}
-        </List>
-      </Card>
-    </section>
-{/***************************************** */}
+                <option value="">All Locations</option>
+                {uniqueLocations.map((location, index) => (
+                  <option
+                    key={index}
+                    value={location}
+                    className="py-2 px-4 transition-transform duration-200 ease-in-out hover:scale-105 hover:bg-green-100 focus:bg-green-200"
+                  >
+                    {location}
+                  </option>
+                ))}
+              </motion.select>
+              <div
+                className={`absolute right-3 top-1/2 transform -translate-y-1/2 transition-transform duration-200 ${
+                  isOpen ? "rotate-180" : ""
+                }`}
+              >
+                {/* <ChevronDownIcon className="w-5 h-5 text-gray-500" /> */}
+              </div>
+            </div>
+          </div>
+        </Card>
+      </section>
+      {/***************************************** */}
       <section>
         <Cards events={filteredEvents} searchQuery={searchQuery} />
       </section>
-      <Footer/>
+      <Footer />
     </main>
   );
 }
