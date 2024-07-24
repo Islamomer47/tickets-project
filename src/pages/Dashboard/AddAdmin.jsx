@@ -44,7 +44,9 @@ function AddAdmin() {
       <NavDashboard />
       <div className="flex">
         <Saidbar />
-        <section className="flex-1 flex items-center justify-center p-10 dark:bg-gray-900 min-h-screen mt-20"> {/* Adjusted margin-top */}
+        <section className="flex-1 flex items-center justify-center p-10 dark:bg-gray-900 min-h-screen mt-20">
+          {" "}
+          {/* Adjusted margin-top */}
           <div className="w-full max-w-md mx-auto shadow-2xl p-6 rounded-xl dark:bg-gray-800">
             <h1 className="mb-4 font-serif font-extrabold text-2xl text-center dark:text-white">
               Add Admin
@@ -65,7 +67,7 @@ function AddAdmin() {
                         setFile(selectedFile);
                       }}
                     />
-                    <label htmlFor="upload_profile" className="cursor-pointer">
+                    <label htmlFor="upload_profile" className="cursor-pointer ">
                       <svg
                         data-slot="icon"
                         className="w-6 h-5 text-blue-700"

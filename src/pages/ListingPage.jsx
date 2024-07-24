@@ -3,17 +3,33 @@ import Cards from "../component/Cards";
 import axios from "axios";
 import Header from "../component/header";
 import Footer from "../component/Footer";
-import { Card } from "@material-tailwind/react";
-import { motion } from "framer-motion";
-import { ChevronDownIcon } from "@heroicons/react/20/solid";
+import { Range, getTrackBackground } from "react-range";
 
 function ListingPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [uniqueLocations, setUniqueLocations] = useState([]);
-  const [selectedLocation, setSelectedLocation] = useState("");
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isOpen, setIsOpen] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const [priceRange, setPriceRange] = useState([0, 100]);
+
+  const STEP = 1;
+  const MIN = 0;
+  const MAX = 100;
+
+  const uniqueLocations = [
+    "Irbid",
+    "Ajloun",
+    "Jerash",
+    "Mafraq",
+    "Balqa",
+    "Amman",
+    "Zarqa",
+    "Madaba",
+    "Karak",
+    "Tafilah",
+    "Aqaba",
+    "Maan",
+  ];
 
   useEffect(() => {
     fetchData();
@@ -30,11 +46,6 @@ function ListingPage() {
           ...response.data[key],
         }));
         setEvents(fetchedEvents);
-
-        const uniqueLocations = [
-          ...new Set(fetchedEvents.map((event) => event.details.location)),
-        ];
-        setUniqueLocations(uniqueLocations);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -43,21 +54,16 @@ function ListingPage() {
     }
   };
 
-  const handleSelectChange = (event) => {
-    setSelectedLocation(event.target.value);
-    setIsOpen(false); // Close the dropdown after selection
-  };
-
-  const handleDropdownToggle = () => {
-    setIsOpen(!isOpen);
-  };
-
-  const filteredEvents = events.filter(
-    (event) =>
+  const filteredEvents = events.filter((event) => {
+    const eventPrice = event.details.price;
+    return (
       (selectedLocation === "" ||
-        event.details.location === selectedLocation) &&
-      event.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+        selectedLocation === event.details.location) &&
+      event.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      eventPrice >= priceRange[0] &&
+      eventPrice <= priceRange[1]
+    );
+  });
 
   if (loading) {
     return (
@@ -70,9 +76,9 @@ function ListingPage() {
   return (
     <main>
       <Header />
-      {/******************************HeroSection in listing page******************************** */}
-      <section className="flex flex-wrap items-center justify-center w-full h-20 shadow-lg gap-44 ">
-        {/********************************search************************ */}
+      {/**********************************search********************************** */}
+
+      <section className="flex flex-wrap items-center justify-center w-full h-20 shadow-lg gap-44shadow-xl ">
         <div className="my-3 xl:w-96">
           <div className="relative flex flex-wrap items-stretch w-full mb-4">
             <input
@@ -103,53 +109,70 @@ function ListingPage() {
             </span>
           </div>
         </div>
-        {/****************************end search************************ */}
       </section>
-      {/****************************** end HeroSection in listing page******************************** */}
-      {/******************************************* */}
-      <section className="flex flex-wrap justify-center gap-3 mt-5">
-        <Card className="w-full max-w-[50rem] p-4 shadow-lg ">
-          <div className="relative">
-            <label
-              htmlFor="location-select"
-              className="block mb-2 text-lg font-semibold text-gray-700"
-            >
-              Select Location:
+
+      {/**********************************end search********************************** */}
+      {/******************************************************************** */}
+
+      <section className="flex flex-wrap justify-center gap-3 mt-16">
+        <div className="flex flex-row flex-wrap gap-10 p-4 space-x-80">
+          {/**********************dropdown list************************* */}
+          <select
+            id="location"
+            className="block px-4 py-3 mb-3 leading-tight text-gray-700 bg-gray-200 border rounded appearance-none h-15 w-52 focus:outline-none focus:bg-white"
+            value={selectedLocation}
+            onChange={(e) => setSelectedLocation(e.target.value)}
+          >
+            <option value="">Select a location</option>
+            {uniqueLocations.map((location, index) => (
+              <option key={index} value={location}>
+                {location}
+              </option>
+            ))}
+          </select>
+          {/**********************end dropdown list************************* */}
+
+          {/**********************price************************* */}
+
+          <div className="flex flex-col items-center ">
+            <label className="mb-2 text-gray-700">
+              Price Range: ${priceRange[0]} - ${priceRange[1]}
             </label>
-            <div className="relative">
-              <motion.select
-                id="location-select"
-                value={selectedLocation}
-                onChange={handleSelectChange}
-                onClick={handleDropdownToggle}
-                className="block w-full py-3 px-4 border border-gray-300 rounded-lg shadow-md bg-white text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2  transition duration-300 ease-in-out"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                <option value="">All Locations</option>
-                {uniqueLocations.map((location, index) => (
-                  <option
-                    key={index}
-                    value={location}
-                    className="py-2 px-4 transition-transform duration-200 ease-in-out hover:scale-105 hover:bg-green-100 focus:bg-green-200"
-                  >
-                    {location}
-                  </option>
-                ))}
-              </motion.select>
-              <div
-                className={`absolute right-3 top-1/2 transform -translate-y-1/2 transition-transform duration-200 ${
-                  isOpen ? "rotate-180" : ""
-                }`}
-              >
-                {/* <ChevronDownIcon className="w-5 h-5 text-gray-500" /> */}
-              </div>
-            </div>
+            <Range
+              values={priceRange}
+              step={STEP}
+              min={MIN}
+              max={MAX}
+              onChange={(values) => setPriceRange(values)}
+              renderTrack={({ props, children }) => (
+                <div
+                  {...props}
+                  className="w-40 h-2 rounded-md"
+                  style={{
+                    background: getTrackBackground({
+                      values: priceRange,
+                      colors: ["#ccc", "#519341", "#ccc"],
+                      min: MIN,
+                      max: MAX,
+                    }),
+                  }}
+                >
+                  {children}
+                </div>
+              )}
+              renderThumb={({ props }) => (
+                <div
+                  {...props}
+                  className="w-6 h-6 bg-green-500 rounded-full focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-opacity-50"
+                />
+              )}
+            />
           </div>
-        </Card>
+          {/**********************end price************************* */}
+        </div>
       </section>
-      {/***************************************** */}
+      {/******************************************************************** */}
+
       <section>
         <Cards events={filteredEvents} searchQuery={searchQuery} />
       </section>
