@@ -34,6 +34,7 @@ function AddAdmin() {
       };
 
       await axios.post(`${dbURL}/Admin.json`, adminData);
+      alert("Admin added successfully!");
     } catch (error) {
       console.error("Error adding new admin:", error);
     }
