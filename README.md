@@ -208,6 +208,6 @@ We welcome contributions from the community. Please follow these steps:
 
 ## Live URL
 
-Check out the live application at [Jordan Journey website](http://your-live-url.com).
+Check out the live application at [Jordan Journey website](https://tickets-project-seven.vercel.app/).
 
 ---
